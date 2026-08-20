@@ -1,0 +1,238 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── Enums ─────────────────────────────────────────────
+
+enum Role {
+  OWNER
+  STAFF
+}
+
+enum UserStatus {
+  ACTIVE
+  INVITED
+  DISABLED
+}
+
+enum TransactionType {
+  MASUK
+  KELUAR
+  TRANSFER
+}
+
+enum TransactionStatus {
+  CONFIRMED
+  VOID
+}
+
+enum TransactionSourceType {
+  MANUAL
+  IMPORT_OCR
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+enum AccountType {
+  CASH
+  BANK
+  EWALLET
+  RECEIVABLE
+  PAYABLE
+}
+
+// ─── Business ──────────────────────────────────────────
+
+model Business {
+  id           String    @id @default(cuid())
+  name         String
+  baseCurrency String    @default("IDR") @db.Char(3)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  users         User[]
+  accounts      Account[]
+  categories    Category[]
+  transactions  Transaction[]
+  exchangeRates ExchangeRate[]
+  auditLogs     AuditLog[]
+
+  @@index([deletedAt])
+}
+
+// ─── User ───────────────────────────────────────────────
+
+model User {
+  id           String     @id @default(cuid())
+  businessId   String
+  email        String     @unique
+  passwordHash String
+  role         Role
+  status       UserStatus @default(ACTIVE)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
+
+  business     Business       @relation(fields: [businessId], references: [id])
+  transactions Transaction[]
+  auditLogs    AuditLog[]
+  refreshTokens RefreshToken[]
+
+  @@index([businessId])
+  @@index([email])
+  @@index([deletedAt])
+}
+
+// ─── RefreshToken ──────────────────────────────────────────
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  token     String    @unique // Hashed token for security
+  userId    String
+  family    String    // To group refresh tokens for rotation (UUID)
+  isRevoked Boolean   @default(false)
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@index([family])
+}
+
+// ─── Account ────────────────────────────────────────────
+
+model Account {
+  id         String      @id @default(cuid())
+  businessId String
+  name       String
+  type       AccountType
+  // currency ditetapkan sekali saat dibuat — TIDAK PERNAH DIUBAH setelah ada transaksi
+  currency   String      @db.Char(3)
+  balance    Decimal     @default(0) @db.Decimal(15, 2)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  business            Business      @relation(fields: [businessId], references: [id])
+  transactions        Transaction[] @relation("AccountTransactions")
+  counterTransactions Transaction[] @relation("CounterAccountTransactions")
+
+  @@index([businessId])
+  @@index([currency])
+  @@index([deletedAt])
+}
+
+// ─── Category ───────────────────────────────────────────
+
+model Category {
+  id         String    @id @default(cuid())
+  businessId String
+  name       String
+  isDefault  Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  business     Business      @relation(fields: [businessId], references: [id])
+  transactions Transaction[]
+
+  @@index([businessId])
+  @@index([deletedAt])
+}
+
+// ─── Transaction ────────────────────────────────────────
+
+model Transaction {
+  id               String                @id @default(cuid())
+  businessId       String
+  accountId        String
+  categoryId       String?
+  userId           String
+  type             TransactionType
+  amount           Decimal               @db.Decimal(15, 2)
+  // currency selalu sama dengan Account.currency — didenormalisasi untuk efisiensi query
+  currency         String                @db.Char(3)
+  // Field berikut hanya relevan untuk type TRANSFER lintas-currency
+  counterAccountId String?
+  counterAmount    Decimal?              @db.Decimal(15, 2)
+  // counterCurrency = currency akun tujuan (counterAccount.currency)
+  counterCurrency  String?               @db.Char(3)
+  // Kurs yang dipakai saat transaksi — disalin (snapshot), BUKAN referensi ke ExchangeRate
+  // Supaya laporan historis tetap benar walau kurs di tabel ExchangeRate diperbarui
+  exchangeRateUsed Decimal?              @db.Decimal(18, 6)
+  description      String?
+  occurredAt       DateTime
+  sourceType       TransactionSourceType @default(MANUAL)
+  status           TransactionStatus     @default(CONFIRMED)
+  idempotencyKey   String?               @unique
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  deletedAt        DateTime?
+
+  business       Business  @relation(fields: [businessId], references: [id])
+  account        Account   @relation("AccountTransactions", fields: [accountId], references: [id])
+  counterAccount Account?  @relation("CounterAccountTransactions", fields: [counterAccountId], references: [id])
+  category       Category? @relation(fields: [categoryId], references: [id])
+  user           User      @relation(fields: [userId], references: [id])
+
+  @@index([businessId])
+  @@index([accountId])
+  @@index([occurredAt])
+  @@index([status])
+  @@index([deletedAt])
+  @@index([idempotencyKey])
+}
+
+// ─── ExchangeRate ────────────────────────────────────────
+
+model ExchangeRate {
+  id            String   @id @default(cuid())
+  businessId    String
+  fromCurrency  String   @db.Char(3)
+  toCurrency    String   @db.Char(3)
+  rate          Decimal  @db.Decimal(18, 6)
+  effectiveDate DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@index([businessId])
+  @@index([fromCurrency, toCurrency, effectiveDate])
+}
+
+// ─── AuditLog ────────────────────────────────────────────
+
+model AuditLog {
+  id          String      @id @default(cuid())
+  businessId  String
+  userId      String?
+  entityType  String
+  entityId    String
+  action      AuditAction
+  beforeState Json?
+  afterState  Json?
+  createdAt   DateTime    @default(now())
+  // NOTE: No updatedAt, no deletedAt — this is intentionally append-only
+
+  business Business @relation(fields: [businessId], references: [id])
+  user     User?    @relation(fields: [userId], references: [id])
+
+  @@index([businessId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}

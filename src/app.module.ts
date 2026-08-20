@@ -1,0 +1,41 @@
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { BullModule } from '@nestjs/bullmq';
+import { validate } from './config/env.validation';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { PrismaModule } from './prisma/prisma.module';
+import { RedisModule } from './common/services/redis.module';
+import { OcrProcessingModule } from './modules/ocr-processing/ocr-processing.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { AccountModule } from './modules/account/account.module';
+import { CategoryModule } from './modules/category/category.module';
+import { TransactionModule } from './modules/transaction/transaction.module';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      validate,
+      isGlobal: true,
+    }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        connection: {
+          url: configService.get<string>('REDIS_URL'),
+        },
+      }),
+      inject: [ConfigService],
+    }),
+    PrismaModule,
+    RedisModule,
+    OcrProcessingModule,
+    AuthModule,
+    AccountModule,
+    CategoryModule,
+    TransactionModule,
+  ],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
