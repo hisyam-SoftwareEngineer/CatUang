@@ -17,7 +17,7 @@ export class AppService {
       await this.prisma.$queryRaw`SELECT 1`;
 
       // Pengecekan Redis via koneksi BullMQ client
-      const redisClient = (await this.ocrQueue.client) as Redis;
+      const redisClient = (await this.ocrQueue.client) as unknown as Redis;
       await redisClient.ping();
 
       return {

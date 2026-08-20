@@ -67,6 +67,11 @@ export class AuditLogInterceptor implements NestInterceptor {
     responseData: unknown,
   ): Promise<void> {
     try {
+      if (!user || !user.businessId) {
+        this.logger.warn(`Skipping audit log for ${metadata.entityType}:${metadata.action} due to missing user.businessId`);
+        return;
+      }
+
       const afterState =
         responseData && typeof responseData === 'object'
           ? (responseData as Prisma.InputJsonValue)
@@ -80,8 +85,8 @@ export class AuditLogInterceptor implements NestInterceptor {
 
       await this.prisma.auditLog.create({
         data: {
-          businessId: user?.businessId,
-          userId: user?.id || null,
+          businessId: user.businessId,
+          userId: user.id || null,
           entityType: metadata.entityType,
           entityId: String(entityId),
           action: metadata.action,
