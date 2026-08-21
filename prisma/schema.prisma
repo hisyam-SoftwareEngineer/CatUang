@@ -56,10 +56,18 @@ enum AccountType {
 model Business {
   id           String    @id @default(cuid())
   name         String
-  baseCurrency String    @default("IDR") @db.Char(3)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  deletedAt    DateTime?
+  baseCurrency             String    @default("IDR") @db.Char(3)
+  realtimeSyncEnabled      Boolean   @default(false)
+  ocrProviderPriority      String    @default("MINDEE,AZURE")
+  ocrProviderEnabled       Boolean   @default(true)
+  ocrQuotaThresholdPercent Int       @default(80)
+  defaultExportFormat      String    @default("PDF")
+  defaultPdfTemplate       String    @default("SIMPLE")
+  enableMultiCurrency      Boolean   @default(false)
+  waLinked                 Boolean   @default(false)
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+  deletedAt                DateTime?
 
   users         User[]
   accounts      Account[]
@@ -67,6 +75,8 @@ model Business {
   transactions  Transaction[]
   exchangeRates ExchangeRate[]
   auditLogs     AuditLog[]
+  importBatches ImportBatch[]
+  exportJobs    ExportJob[]
 
   @@index([deletedAt])
 }
@@ -88,6 +98,7 @@ model User {
   transactions Transaction[]
   auditLogs    AuditLog[]
   refreshTokens RefreshToken[]
+  exportJobs    ExportJob[]
 
   @@index([businessId])
   @@index([email])
@@ -188,6 +199,7 @@ model Transaction {
   counterAccount Account?  @relation("CounterAccountTransactions", fields: [counterAccountId], references: [id])
   category       Category? @relation(fields: [categoryId], references: [id])
   user           User      @relation(fields: [userId], references: [id])
+  importBatchItem ImportBatchItem?
 
   @@index([businessId])
   @@index([accountId])
@@ -235,4 +247,72 @@ model AuditLog {
   @@index([businessId])
   @@index([entityType, entityId])
   @@index([createdAt])
+}
+
+// ─── Import/OCR ──────────────────────────────────────────
+
+enum ImportStatus {
+  PROCESSING
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  ERROR
+}
+
+model ImportBatch {
+  id         String            @id @default(cuid())
+  businessId String
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  
+  items      ImportBatchItem[]
+  business   Business          @relation(fields: [businessId], references: [id])
+
+  @@index([businessId])
+}
+
+model ImportBatchItem {
+  id             String       @id @default(cuid())
+  batchId        String
+  status         ImportStatus @default(PROCESSING)
+  parsedData     Json?
+  providerUsed   String?
+  transactionId  String?      @unique
+  imageUrl       String?
+  errorMessage   String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  batch       ImportBatch  @relation(fields: [batchId], references: [id])
+  transaction Transaction? @relation(fields: [transactionId], references: [id])
+
+  @@index([batchId])
+  @@index([status])
+}
+
+// ─── Export/Report ───────────────────────────────────────
+
+enum ExportStatus {
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model ExportJob {
+  id           String       @id @default(cuid())
+  businessId   String
+  userId       String
+  status       ExportStatus @default(PROCESSING)
+  reportType   String
+  format       String
+  downloadUrl  String?
+  errorMessage String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+
+  @@index([businessId])
+  @@index([userId])
 }

@@ -11,6 +11,9 @@ import { AuthModule } from './modules/auth/auth.module';
 import { AccountModule } from './modules/account/account.module';
 import { CategoryModule } from './modules/category/category.module';
 import { TransactionModule } from './modules/transaction/transaction.module';
+import { ExchangeRateModule } from './modules/exchange-rate/exchange-rate.module';
+import { ReportModule } from './modules/report/report.module';
+import { SettingsModule } from './modules/settings/settings.module';
 
 @Module({
   imports: [
@@ -34,6 +37,9 @@ import { TransactionModule } from './modules/transaction/transaction.module';
     AccountModule,
     CategoryModule,
     TransactionModule,
+    ExchangeRateModule,
+    ReportModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

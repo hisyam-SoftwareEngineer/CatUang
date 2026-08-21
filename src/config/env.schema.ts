@@ -35,6 +35,18 @@ export const envSchema = z.object({
   ALLOWED_ORIGIN: z.string().url({
     message: 'ALLOWED_ORIGIN must be a valid URL (e.g., http://localhost:3001)',
   }),
+
+  // ─── Cloudinary (optional — tanpa ini pakai dummy storage) ───────────────
+  CLOUDINARY_CLOUD_NAME: z.string().optional(),
+  CLOUDINARY_API_KEY: z.string().optional(),
+  CLOUDINARY_API_SECRET: z.string().optional(),
+
+  // ─── Mindee OCR (optional — tanpa ini pakai dummy OCR) ───────────────────
+  MINDEE_API_KEY: z.string().optional(),
+
+  // ─── Azure Computer Vision (optional — fallback dari Mindee) ─────────────
+  AZURE_VISION_ENDPOINT: z.string().url().optional(),
+  AZURE_VISION_KEY: z.string().optional(),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;
