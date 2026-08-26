@@ -35,9 +35,24 @@ export class SettingsService {
   }
 
   async updateSettings(businessId: string, userId: string, dto: UpdateSettingsDto) {
-    // Verifikasi bisnis ada
+    // Verifikasi bisnis ada dan ambil semua field settings yang dibutuhkan untuk audit log
     const existing = await this.prisma.business.findUnique({
       where: { id: businessId },
+      select: {
+        id: true,
+        name: true,
+        baseCurrency: true,
+        realtimeSyncEnabled: true,
+        ocrProviderPriority: true,
+        ocrProviderEnabled: true,
+        ocrQuotaThresholdPercent: true,
+        defaultExportFormat: true,
+        defaultPdfTemplate: true,
+        enableMultiCurrency: true,
+        waLinked: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
     if (!existing) {
