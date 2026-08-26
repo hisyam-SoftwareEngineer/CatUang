@@ -70,6 +70,23 @@ export class RedisService implements OnModuleDestroy {
     return result === 1;
   }
 
+  /**
+   * Increment counter atomically. Set TTL hanya pada call pertama (saat counter = 1).
+   * Dipakai untuk sliding window rate limiter.
+   *
+   * @param key - Redis key
+   * @param ttlSeconds - TTL dalam detik yang di-set saat key baru dibuat
+   * @returns Nilai counter setelah increment
+   */
+  async incr(key: string, ttlSeconds: number): Promise<number> {
+    const value = await this.client.incr(key);
+    if (value === 1) {
+      // Key baru dibuat — set TTL agar window otomatis reset
+      await this.client.expire(key, ttlSeconds);
+    }
+    return value;
+  }
+
   async onModuleDestroy(): Promise<void> {
     await this.client.quit();
     this.logger.log('Redis disconnected');

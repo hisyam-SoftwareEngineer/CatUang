@@ -1,10 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { InputType } from '@prisma/client';
 import { OcrProvider, NormalizedReceiptResult } from './ocr-provider.interface';
 
 @Injectable()
 export class MindeeOcrProvider implements OcrProvider {
   name = 'mindee';
+  supportedInputTypes: InputType[] = [InputType.RECEIPT];
   private readonly logger = new Logger(MindeeOcrProvider.name);
   private apiKey: string | null = null;
 
@@ -20,7 +22,7 @@ export class MindeeOcrProvider implements OcrProvider {
     return this.apiKey !== null;
   }
 
-  async extractReceipt(fileBuffer: Buffer): Promise<NormalizedReceiptResult> {
+  async extractReceipt(fileBuffer: Buffer, inputType?: InputType): Promise<NormalizedReceiptResult> {
     if (!this.apiKey) {
       throw new Error('Mindee API key not configured');
     }

@@ -47,6 +47,16 @@ export const envSchema = z.object({
   // ─── Azure Computer Vision (optional — fallback dari Mindee) ─────────────
   AZURE_VISION_ENDPOINT: z.string().url().optional(),
   AZURE_VISION_KEY: z.string().optional(),
+
+  // ─── Google Gemini (optional — AI-powered OCR provider) ──────────────────
+  GEMINI_API_KEY: z.string().optional(),
+
+  // ─── Google Cloud Vision (optional — OCR provider via API key atau SA) ───
+  GOOGLE_CLOUD_VISION_API_KEY: z.string().optional(),
+  GOOGLE_APPLICATION_CREDENTIALS: z.string().optional(),
+
+  // ─── Tesseract (optional — local OCR provider) ───────────────────────────
+  TESSERACT_LANG: z.string().default('ind+eng'),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

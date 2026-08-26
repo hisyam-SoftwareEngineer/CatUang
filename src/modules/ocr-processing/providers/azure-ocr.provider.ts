@@ -2,11 +2,13 @@
 import { ConfigService } from '@nestjs/config';
 import { ComputerVisionClient } from '@azure/cognitiveservices-computervision';
 import { ApiKeyCredentials } from '@azure/ms-rest-js';
+import { InputType } from '@prisma/client';
 import { OcrProvider, NormalizedReceiptResult } from './ocr-provider.interface';
 
 @Injectable()
 export class AzureOcrProvider implements OcrProvider {
   name = 'azure-vision';
+  supportedInputTypes: InputType[] = [InputType.RECEIPT];
   private readonly logger = new Logger(AzureOcrProvider.name);
   private client: ComputerVisionClient | null = null;
 
@@ -25,7 +27,7 @@ export class AzureOcrProvider implements OcrProvider {
     return this.client !== null;
   }
 
-  async extractReceipt(fileBuffer: Buffer): Promise<NormalizedReceiptResult> {
+  async extractReceipt(fileBuffer: Buffer, inputType?: InputType): Promise<NormalizedReceiptResult> {
     if (!this.client) {
       throw new Error('Azure Vision not configured');
     }

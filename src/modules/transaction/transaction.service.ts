@@ -19,6 +19,7 @@ import {
   AuditAction,
   Prisma,
   Transaction,
+  TransactionSourceType,
   TransactionStatus,
   TransactionType,
 } from '@prisma/client';
@@ -59,6 +60,7 @@ export class TransactionService {
     userId: string,
     businessId: string,
     idempotencyKey: string,
+    sourceType: TransactionSourceType = TransactionSourceType.MANUAL,
   ): Promise<TransactionEntity> {
     // ── Guard: idempotency key wajib ──────────────────────────────────────
     if (!idempotencyKey?.trim()) {
@@ -205,7 +207,7 @@ export class TransactionService {
             currency: dto.currency.toUpperCase(),
             description: dto.description ?? null,
             occurredAt,
-            sourceType: 'MANUAL',
+            sourceType: sourceType,
             status: TransactionStatus.CONFIRMED,
             idempotencyKey,
             // TRANSFER fields

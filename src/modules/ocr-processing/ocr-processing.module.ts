@@ -7,11 +7,15 @@ import { OcrWorker } from './ocr.worker';
 import { DummyOcrProvider } from './providers/dummy-ocr.provider';
 import { MindeeOcrProvider } from './providers/mindee-ocr.provider';
 import { AzureOcrProvider } from './providers/azure-ocr.provider';
+import { GeminiOcrProvider } from './providers/gemini-ocr.provider';
+import { GoogleVisionOcrProvider } from './providers/google-vision-ocr.provider';
+import { TesseractOcrProvider } from './providers/tesseract-ocr.provider';
 import { OcrProviderFactory } from './providers/ocr-provider.factory';
 import { DummyStorageService } from './storage/dummy-storage.service';
 import { CloudinaryStorageService } from './storage/cloudinary-storage.service';
 import { TransactionModule } from '../transaction/transaction.module';
 import { ConfigService } from '@nestjs/config';
+import { UploadRateLimiterGuard } from './guards/upload-rate-limiter.guard';
 
 @Module({
   imports: [
@@ -41,6 +45,10 @@ import { ConfigService } from '@nestjs/config';
     MindeeOcrProvider,
     AzureOcrProvider,
     DummyOcrProvider,
+    GeminiOcrProvider,
+    GoogleVisionOcrProvider,
+    TesseractOcrProvider,
+    UploadRateLimiterGuard,
   ],
 })
 export class OcrProcessingModule {}

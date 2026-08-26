@@ -259,6 +259,11 @@ enum ImportStatus {
   ERROR
 }
 
+enum InputType {
+  RECEIPT
+  HANDWRITTEN
+}
+
 model ImportBatch {
   id         String            @id @default(cuid())
   businessId String
@@ -280,6 +285,10 @@ model ImportBatchItem {
   transactionId  String?      @unique
   imageUrl       String?
   errorMessage   String?
+  inputType      InputType    @default(RECEIPT)
+  parsedItems    Json?
+  confidence     Float?
+  rawOcrText     String?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
@@ -288,6 +297,7 @@ model ImportBatchItem {
 
   @@index([batchId])
   @@index([status])
+  @@index([inputType])
 }
 
 // ─── Export/Report ───────────────────────────────────────
