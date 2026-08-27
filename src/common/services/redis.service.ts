@@ -35,6 +35,13 @@ export class RedisService implements OnModuleDestroy {
   }
 
   /**
+   * Ping Redis — dipakai untuk health check.
+   */
+  async ping(): Promise<void> {
+    await this.client.ping();
+  }
+
+  /**
    * Ambil nilai dari Redis. Return null kalau key tidak ada.
    */
   async get(key: string): Promise<string | null> {

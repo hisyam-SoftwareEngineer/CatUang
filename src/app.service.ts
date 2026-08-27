@@ -1,14 +1,12 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from './prisma/prisma.service';
-import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
-import Redis from 'ioredis';
+import { RedisService } from './common/services/redis.service';
 
 @Injectable()
 export class AppService {
   constructor(
     private readonly prisma: PrismaService,
-    @InjectQueue('ocr-processing') private readonly ocrQueue: Queue,
+    private readonly redis: RedisService,
   ) {}
 
   async checkHealth() {
@@ -16,9 +14,8 @@ export class AppService {
       // Pengecekan Postgres
       await this.prisma.$queryRaw`SELECT 1`;
 
-      // Pengecekan Redis via koneksi BullMQ client
-      const redisClient = (await this.ocrQueue.client) as unknown as Redis;
-      await redisClient.ping();
+      // Pengecekan Redis via RedisService (dedicated ioredis client)
+      await this.redis.ping();
 
       return {
         status: 'ok',
