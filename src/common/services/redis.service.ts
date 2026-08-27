@@ -15,14 +15,17 @@ export class RedisService implements OnModuleDestroy {
   private readonly logger = new Logger(RedisService.name);
 
   constructor(private readonly configService: ConfigService) {
-    this.client = new Redis(
-      this.configService.getOrThrow<string>('REDIS_URL'),
-      {
-        maxRetriesPerRequest: 3,
-        enableReadyCheck: true,
-        lazyConnect: false,
-      },
-    );
+    const redisUrl = this.configService.getOrThrow<string>('REDIS_URL');
+    const isTls = redisUrl.startsWith('rediss://');
+
+    this.client = new Redis(redisUrl, {
+      maxRetriesPerRequest: 3,
+      enableReadyCheck: true,
+      lazyConnect: false,
+      // Upstash (dan provider Redis managed lain) mewajibkan TLS.
+      // Kalau URL pakai rediss://, aktifkan TLS secara eksplisit.
+      tls: isTls ? { rejectUnauthorized: false } : undefined,
+    });
 
     this.client.on('error', (err: Error) => {
       // Log tapi jangan crash — sesuai fail-open principle untuk shared infra
