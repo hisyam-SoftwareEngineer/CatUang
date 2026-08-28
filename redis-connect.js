@@ -2,7 +2,10 @@ require('dotenv').config();
 const Redis = require('ioredis');
 
 // Membaca koneksi langsung dari .env
-const redis = new Redis(process.env.REDIS_URL);
+const redis = new Redis(process.env.REDIS_URL, {
+  tls: { rejectUnauthorized: false },
+  family: 4
+});
 
 redis.on('connect', () => {
   console.log('Berhasil terhubung ke Redis!');

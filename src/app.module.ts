@@ -23,11 +23,17 @@ import { SettingsModule } from './modules/settings/settings.module';
     }),
     BullModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        connection: {
-          url: configService.get<string>('REDIS_URL'),
-        },
-      }),
+      useFactory: (configService: ConfigService) => {
+        const redisUrl = configService.get<string>('REDIS_URL');
+        const isTls = redisUrl?.startsWith('rediss://');
+        return {
+          connection: {
+            url: redisUrl,
+            maxRetriesPerRequest: null,
+            tls: isTls ? { rejectUnauthorized: false } : undefined,
+          },
+        };
+      },
       inject: [ConfigService],
     }),
     PrismaModule,
