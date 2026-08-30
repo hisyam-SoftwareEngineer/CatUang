@@ -1,6 +1,8 @@
-﻿import { Test, TestingModule } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { SettingsService } from './settings.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { RedisService } from '../../common/services/redis.service';
+import { WhatsappBotService } from '../whatsapp-bot/whatsapp-bot.service';
 import { NotFoundException } from '@nestjs/common';
 import { AuditAction } from '@prisma/client';
 
@@ -19,6 +21,19 @@ describe('SettingsService', () => {
     $transaction: jest.fn((callback) => callback(mockPrismaService)),
   };
 
+  const mockRedisService = {
+    get: jest.fn(),
+    set: jest.fn(),
+    del: jest.fn(),
+    exists: jest.fn(),
+    incr: jest.fn(),
+  };
+
+  const mockWhatsappBotService = {
+    sendReply: jest.fn(),
+    handleIncomingMessage: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -26,6 +41,14 @@ describe('SettingsService', () => {
         {
           provide: PrismaService,
           useValue: mockPrismaService,
+        },
+        {
+          provide: RedisService,
+          useValue: mockRedisService,
+        },
+        {
+          provide: WhatsappBotService,
+          useValue: mockWhatsappBotService,
         },
       ],
     }).compile();

@@ -14,6 +14,7 @@ import { TransactionModule } from './modules/transaction/transaction.module';
 import { ExchangeRateModule } from './modules/exchange-rate/exchange-rate.module';
 import { ReportModule } from './modules/report/report.module';
 import { SettingsModule } from './modules/settings/settings.module';
+import { WhatsappBotModule } from './modules/whatsapp-bot/whatsapp-bot.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { SettingsModule } from './modules/settings/settings.module';
     ExchangeRateModule,
     ReportModule,
     SettingsModule,
+    WhatsappBotModule,
   ],
   controllers: [AppController],
   providers: [AppService],

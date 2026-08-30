@@ -90,6 +90,11 @@ model User {
   passwordHash String
   role         Role
   status       UserStatus @default(ACTIVE)
+  // WhatsApp Integration
+  whatsappPhone      String?    @unique
+  waVerified         Boolean    @default(false)
+  waVerifiedAt       DateTime?
+  waVerificationCode String?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   deletedAt    DateTime?
