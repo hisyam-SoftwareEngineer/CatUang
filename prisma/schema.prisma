@@ -77,6 +77,8 @@ model Business {
   auditLogs     AuditLog[]
   importBatches ImportBatch[]
   exportJobs    ExportJob[]
+  assets        Asset[]
+  liabilities   Liability[]
 
   @@index([deletedAt])
 }
@@ -330,4 +332,40 @@ model ExportJob {
 
   @@index([businessId])
   @@index([userId])
+}
+
+// ─── Asset and Liability ──────────────────────────────────
+
+model Asset {
+  id          String    @id @default(cuid())
+  businessId  String
+  name        String
+  value       Decimal   @db.Decimal(15, 2)
+  currency    String    @default("IDR") @db.Char(3)
+  acquiredAt  DateTime
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  business    Business  @relation(fields: [businessId], references: [id])
+
+  @@index([businessId])
+  @@index([deletedAt])
+}
+
+model Liability {
+  id          String    @id @default(cuid())
+  businessId  String
+  name        String
+  amount      Decimal   @db.Decimal(15, 2)
+  currency    String    @default("IDR") @db.Char(3)
+  dueDate     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  business    Business  @relation(fields: [businessId], references: [id])
+
+  @@index([businessId])
+  @@index([deletedAt])
 }

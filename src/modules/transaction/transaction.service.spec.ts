@@ -130,6 +130,12 @@ function setupTxMock(lockedAccounts: (typeof mockAccount)[]) {
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
+import { SyncService } from '../sync/sync.service';
+
+const mockSync = {
+  emitEvent: jest.fn(),
+};
+
 describe('TransactionService', () => {
   let service: TransactionService;
 
@@ -139,6 +145,7 @@ describe('TransactionService', () => {
         TransactionService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: RedisService, useValue: mockRedis },
+        { provide: SyncService, useValue: mockSync },
       ],
     }).compile();
 

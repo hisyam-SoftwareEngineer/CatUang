@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { SyncService } from '../sync/sync.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { AccountEntity } from './entities/account.entity';
 import { AccountNotFoundException } from '../../common/exceptions/business.exception';
@@ -8,7 +9,10 @@ import { AccountNotFoundException } from '../../common/exceptions/business.excep
 export class AccountService {
   private readonly logger = new Logger(AccountService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly syncService: SyncService,
+  ) {}
 
   /**
    * Membuat akun baru milik business pengguna.
@@ -27,13 +31,17 @@ export class AccountService {
       },
     });
 
-    return new AccountEntity({
+    const entity = new AccountEntity({
       id: account.id,
       name: account.name,
       type: account.type,
       currency: account.currency,
       balance: account.balance.toString(),
     });
+
+    this.syncService.emitEvent(businessId, 'account.created', entity);
+
+    return entity;
   }
 
   /**

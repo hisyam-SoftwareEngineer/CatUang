@@ -25,6 +25,8 @@ import {
 } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 
+import { SyncService } from '../sync/sync.service';
+
 /** TTL idempotency key di Redis: 24 jam */
 const IDEMPOTENCY_TTL_SECONDS = 86_400;
 
@@ -38,6 +40,7 @@ export class TransactionService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
+    private readonly syncService: SyncService,
   ) {}
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -289,6 +292,8 @@ export class TransactionService {
       );
     }
 
+    this.syncService.emitEvent(businessId, 'transaction.created', entity);
+
     return entity;
   }
 
@@ -468,7 +473,14 @@ export class TransactionService {
       },
     );
 
-    return this.toEntity(result.transaction, result.newBalance.toString());
+    const entity = this.toEntity(
+      result.transaction,
+      result.newBalance.toString(),
+    );
+
+    this.syncService.emitEvent(businessId, 'transaction.voided', entity);
+
+    return entity;
   }
 
   // ─────────────────────────────────────────────────────────────────────────

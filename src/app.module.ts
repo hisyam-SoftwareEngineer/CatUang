@@ -15,6 +15,9 @@ import { ExchangeRateModule } from './modules/exchange-rate/exchange-rate.module
 import { ReportModule } from './modules/report/report.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { WhatsappBotModule } from './modules/whatsapp-bot/whatsapp-bot.module';
+import { AssetLiabilityModule } from './modules/asset-liability/asset-liability.module';
+import { SyncModule } from './modules/sync/sync.module';
+import { NotificationModule } from './modules/notification/notification.module';
 
 @Module({
   imports: [
@@ -48,6 +51,9 @@ import { WhatsappBotModule } from './modules/whatsapp-bot/whatsapp-bot.module';
     ReportModule,
     SettingsModule,
     WhatsappBotModule,
+    AssetLiabilityModule,
+    SyncModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

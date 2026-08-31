@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Body, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { WhatsappBotService } from './whatsapp-bot.service';
+import { WhatsappSignatureGuard } from './guards/whatsapp-signature.guard';
 
 @Controller('webhooks/whatsapp')
 export class WhatsappBotController {
@@ -20,9 +21,10 @@ export class WhatsappBotController {
   }
 
   @Post()
+  @UseGuards(WhatsappSignatureGuard)
   @HttpCode(HttpStatus.OK)
   async handleWebhook(@Body() body: any) {
-    // TODO: Verify X-Hub-Signature-256 header in production
+    // Verify X-Hub-Signature-256 header verified via WhatsappSignatureGuard
     
     // Check if it's a valid WhatsApp API webhook payload
     if (body.object === 'whatsapp_business_account') {

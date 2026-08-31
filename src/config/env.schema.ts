@@ -57,6 +57,12 @@ export const envSchema = z.object({
 
   // ─── Tesseract (optional — local OCR provider) ───────────────────────────
   TESSERACT_LANG: z.string().default('ind+eng'),
+
+  // ─── WhatsApp Business API (optional) ────────────────────────────────────
+  WA_VERIFY_TOKEN: z.string().optional(),
+  WA_ACCESS_TOKEN: z.string().optional(),
+  WA_PHONE_NUMBER_ID: z.string().optional(),
+  WA_APP_SECRET: z.string().optional(),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;
